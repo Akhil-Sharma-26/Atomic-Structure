@@ -133,6 +133,7 @@
     <ClCompile Include="Atomic-Structure.cpp" />
     <ClCompile Include="Ground.cpp" />
     <ClCompile Include="Input.cpp" />
+    <ClCompile Include="Sphere.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\camera.hpp" />

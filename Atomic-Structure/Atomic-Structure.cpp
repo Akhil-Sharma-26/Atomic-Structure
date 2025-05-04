@@ -7,7 +7,7 @@
 #include "headers/Ground.hpp"
 #include "headers/camera.hpp"
 #include "headers/Inputs.hpp"
-
+#include "headers/sphere.hpp"
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 // settings
@@ -20,6 +20,19 @@ Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+
+// position of protons and neutrons
+const std::vector<glm::vec3> nuclearPositions = {
+    glm::vec3(0.2f,  0.2f,  0.2f),  // Front-top-right
+    glm::vec3(-0.2f,  0.2f,  0.2f),  // Front-top-left
+    glm::vec3(0.2f, -0.2f,  0.2f),  // Front-bottom-right
+    glm::vec3(-0.2f, -0.2f,  0.2f),  // Front-bottom-left
+    glm::vec3(0.2f,  0.2f, -0.2f),  // Back-top-right
+    glm::vec3(-0.2f,  0.2f, -0.2f),  // Back-top-left
+    glm::vec3(0.2f, -0.2f, -0.2f),  // Back-bottom-right
+    glm::vec3(-0.2f, -0.2f, -0.2f)   // Back-bottom-left
+};
+
 
 int main()
 {
@@ -80,14 +93,14 @@ int main()
     // OpenGL state
     glEnable(GL_DEPTH_TEST); // using depth
 
-    // Build and compile shaders
-	Shader ourShader("C:\\Users\\Akhil\\source\\repos\\Atomic-Structure\\Atomic-Structure\\assets\\shaders\\model.vert",
-        "C:\\Users\\Akhil\\source\\repos\\Atomic-Structure\\Atomic-Structure\\assets\\shaders\\model.frag");
-
-
     // Making a ground
-    Ground grnd(50, 50);
+    //Ground grnd(50, 50);
 
+    // Making a Sphere
+    Sphere sphere(1.0f, 128, 128,
+        "C:\\Users\\Akhil\\source\\repos\\Atomic-Structure\\Atomic-Structure\\assets\\shaders\\Sphere.vert",
+        "C:\\Users\\Akhil\\source\\repos\\Atomic-Structure\\Atomic-Structure\\assets\\shaders\\Sphere.frag");
+    
     // render loop
     while (!glfwWindowShouldClose(window))
     {
@@ -95,6 +108,8 @@ int main()
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+
+        
 
         // process input
         Input::keyboardInput(window, camera, deltaTime);
@@ -115,26 +130,28 @@ int main()
         }
 
         // 1. Render the 3D scene
-        ourShader.use();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
             (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view);
-        glm::mat4 model = glm::mat4(1.0f);
-        //model = glm::translate(model, objPos);
-        ourShader.setMat4("model", model);
-        /*backpack.Draw(ourShader);*/
+        //ourShader.setMat4("projection", projection);
+        //ourShader.setMat4("view", view
+        //grnd.render(view, projection, camera.Position);
+        for (const auto& it : nuclearPositions) {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, it);
+            sphere.render(view, projection, camera.Position, model);
+        }
 
-        grnd.render(view, projection, camera.Position);
 
-
+        GLenum error = glGetError();
+        if (error != GL_NO_ERROR) {
+            std::cout << "OpenGL error during ground rendering: " << error << std::endl;
+        }
         // Swap buffers and poll events
         glfwSwapBuffers(window);
         glfwPollEvents();
 
     }
-
     // Cleanup ImGui and GLFW resources
     glfwTerminate();
     return 0;
