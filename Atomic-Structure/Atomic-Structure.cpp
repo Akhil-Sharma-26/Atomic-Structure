@@ -8,6 +8,10 @@
 #include "headers/camera.hpp"
 #include "headers/Inputs.hpp"
 #include "headers/sphere.hpp"
+#include <random>
+#include "headers/Electrons.hpp"
+
+// for resizing the window
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 // settings
@@ -33,6 +37,50 @@ const std::vector<glm::vec3> nuclearPositions = {
     glm::vec3(-0.2f, -0.2f, -0.2f)   // Back-bottom-left
 };
 
+// making the planes of the electrons
+std::vector<Electron> electrons;
+
+// Create different energy levels
+const int energyLevels = 3;
+const float baseRadius = 0.8f;
+const float radiusStep = 0.6f;
+const float baseSpeed = 45.0f;  // Degrees per second
+
+std::random_device rd;
+std::mt19937 gen(rd());
+std::uniform_real_distribution<float> angleDist(0.0f, 360.0f);
+
+void static setup_electron() {
+    electrons.reserve(energyLevels * 2);  // Pre-allocate memory
+
+    for (int level = 1; level <= energyLevels; ++level) {
+        const float radius = baseRadius + level * radiusStep;
+        const int electronsPerLevel = level * 2;
+        const float speed = baseSpeed / level;
+
+        for (int e = 0; e < electronsPerLevel; ++e) {
+            // Create random orbital plane
+            glm::vec3 normal(
+                (gen() % 100) / 100.0f - 0.5f,
+                (gen() % 100) / 100.0f - 0.5f,
+                (gen() % 100) / 100.0f - 0.5f
+            );
+            normal = glm::normalize(normal);
+
+            electrons.emplace_back(
+                radius,
+                speed,
+                normal,
+                glm::vec3(0.2f, 0.5f, 1.0f) * (0.7f + (level - 1) * 0.15f)
+            );
+
+            // Set random starting angle
+            electrons.back().Update(angleDist(gen));
+        }
+    }
+}
+
+
 
 int main()
 {
@@ -53,7 +101,7 @@ int main()
 #endif
 
     // Creating GLFW window
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "RaceGL", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Atomic Structure", nullptr, nullptr);
     if (!window)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -101,6 +149,7 @@ int main()
         "C:\\Users\\Akhil\\source\\repos\\Atomic-Structure\\Atomic-Structure\\assets\\shaders\\Sphere.vert",
         "C:\\Users\\Akhil\\source\\repos\\Atomic-Structure\\Atomic-Structure\\assets\\shaders\\Sphere.frag");
     
+    setup_electron();
     // render loop
     while (!glfwWindowShouldClose(window))
     {
@@ -136,11 +185,24 @@ int main()
         //ourShader.setMat4("projection", projection);
         //ourShader.setMat4("view", view
         //grnd.render(view, projection, camera.Position);
+
+        // updating the electron's positon
+        for (auto& electron : electrons) {
+            electron.Update(deltaTime);
+        }
+
+        // rendering the nucleas
         for (const auto& it : nuclearPositions) {
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, it);
             sphere.render(view, projection, camera.Position, model);
         }
+
+        // rendering electrons
+        for (auto& electron : electrons) {
+            electron.Render(view, projection, camera.Position);
+        }
+
 
 
         GLenum error = glGetError();

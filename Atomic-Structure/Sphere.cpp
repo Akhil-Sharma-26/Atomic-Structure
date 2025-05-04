@@ -8,7 +8,7 @@ Sphere::Sphere(float radius, int sectors, int stacks, const char* vertPath, cons
     setupBuffers();
 
     try {
-        shader = new Shader(vertPath, fragPath);
+        shader = std::make_unique<Shader>(vertPath, fragPath);
         initialized = true;
         std::cout << "Sphere shader compilation successful" << std::endl;
     }
@@ -124,8 +124,37 @@ void Sphere::render(const glm::mat4& view, const glm::mat4& projection,
 }
 
 Sphere::~Sphere() {
-    if (shader) delete shader;
+    if (shader) {
+        shader = nullptr;
+    }
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
+
+    VAO = VBO = EBO = 0;
+}
+
+Sphere::Sphere(Sphere&& other) noexcept
+    : VAO(other.VAO), VBO(other.VBO), EBO(other.EBO),
+    indexCount(other.indexCount),
+    shader(std::move(other.shader)),
+    initialized(other.initialized) {
+    other.VAO = other.VBO = other.EBO = 0;
+    other.initialized = false;
+}
+
+Sphere& Sphere::operator=(Sphere&& other) noexcept {
+    if (this != &other) {
+        this->~Sphere();
+        VAO = other.VAO;
+        VBO = other.VBO;
+        EBO = other.EBO;
+        indexCount = other.indexCount;
+        shader = std::move(other.shader);
+        initialized = other.initialized;
+
+        other.VAO = other.VBO = other.EBO = 0;
+        other.initialized = false;
+    }
+    return *this;
 }

@@ -14,6 +14,13 @@ public:
 
     void render(const glm::mat4& view, const glm::mat4& projection,
         const glm::vec3& viewPos, const glm::mat4& model = glm::mat4(1.0f));
+    Shader& GetShader() { return *shader; }
+    Sphere(const Sphere&) = delete;            // Disable copy
+    Sphere& operator=(const Sphere&) = delete; // Disable assignment
+
+    Sphere(Sphere&& other) noexcept;           // Enable move
+    Sphere& operator=(Sphere&& other) noexcept;
+
 
 
 private:
@@ -22,7 +29,7 @@ private:
 
     GLuint VAO, VBO, EBO;
     unsigned int indexCount;
-    Shader* shader;
+    std::unique_ptr<Shader> shader;
     bool initialized;
 
     std::vector<float> vertices;
