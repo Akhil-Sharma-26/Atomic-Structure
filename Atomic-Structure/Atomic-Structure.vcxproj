@@ -131,6 +131,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Atomic-Structure.cpp" />
+    <ClCompile Include="Ground.cpp" />
+    <ClCompile Include="Input.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="headers\camera.hpp" />
+    <ClInclude Include="headers\Ground.hpp" />
+    <ClInclude Include="headers\Inputs.hpp" />
+    <ClInclude Include="headers\shaders.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
