@@ -178,12 +178,14 @@ void drawElectron(const Electron &e) {
     // Rotate to align with orbital plane
     // The rotation axis (-e.normal[1], e.normal[0], 0) is perpendicular to both
     // the z-axis and the orbital normal, creating the correct orbital plane
+    //---------------------------------------------------------------------------------
     glRotatef(rotAngle, -e.normal[1], e.normal[0], 0.0f);
     
     // Position electron in its orbit
     glRotatef(e.angle, 0, 0, 1);           // Rotate to current angle around z-axis
     glTranslatef(e.radius, 0, 0);          // Move outward to orbital radius
     
+    //---------------------------------------------------------------------------------
     // Set electron material properties
     GLfloat matAmbient[] = {e.color[0]*0.3, e.color[1]*0.3, e.color[2]*0.3, 1.0};
     GLfloat matDiffuse[] = {e.color[0], e.color[1], e.color[2], 1.0};
@@ -264,7 +266,7 @@ void display() {
         drawOrbit(e);         // Draw its orbital path
         
         // Update electron position for next frame (animation)
-        e.angle += e.speed * 0.016f;  // 0.016 seconds = ~60 FPS
+        e.angle += e.speed * 0.025f;  // 0.016 seconds = ~60 FPS
         if(e.angle > 360) e.angle -= 360;  // Keep angle in 0-360 range
     }
     
@@ -337,21 +339,21 @@ void keyboard(unsigned char key, int x, int y) {
             break;
         case 'a': // Strafe left
             // Move both camera and look-at point to the left
-            camX -= rightX * moveSpeed;
-            camY -= rightY * moveSpeed;
-            camZ -= rightZ * moveSpeed;
-            lookX -= rightX * moveSpeed;
-            lookY -= rightY * moveSpeed;
-            lookZ -= rightZ * moveSpeed;
-            break;
-        case 'd': // Strafe right
-            // Move both camera and look-at point to the right
             camX += rightX * moveSpeed;
             camY += rightY * moveSpeed;
             camZ += rightZ * moveSpeed;
             lookX += rightX * moveSpeed;
             lookY += rightY * moveSpeed;
             lookZ += rightZ * moveSpeed;
+            break;
+        case 'd': // Strafe right
+            // Move both camera and look-at point to the right
+            camX -= rightX * moveSpeed;
+            camY -= rightY * moveSpeed;
+            camZ -= rightZ * moveSpeed;
+            lookX -= rightX * moveSpeed;
+            lookY -= rightY * moveSpeed;
+            lookZ -= rightZ * moveSpeed;
             break;
         case ' ': // Move up (space bar)
             camY += moveSpeed;
@@ -366,19 +368,14 @@ void keyboard(unsigned char key, int x, int y) {
             if(lightingEnabled) glEnable(GL_LIGHTING);
             else glDisable(GL_LIGHTING);
             break;
-        case 'm': // Toggle mouse capture mode
-            mouseCaptured = !mouseCaptured;
-            if (mouseCaptured) {
-                glutSetCursor(GLUT_CURSOR_NONE); // Hide cursor
-            } else {
-                glutSetCursor(GLUT_CURSOR_INHERIT); // Show cursor
-            }
-            break;
     }
     
     // Request a redraw with updated camera position
     glutPostRedisplay();
 }
+
+// glutPostRedisplay, swapbuffer, clearbuffer -> diffs
+// push and pop matrix
 
 //======================================================================================
 // MOUSE MOVEMENT HANDLER
@@ -434,6 +431,7 @@ void mouseMotion(int x, int y) {
     float distance = sqrt(pow(lookX-camX, 2) + pow(lookY-camY, 2) + pow(lookZ-camZ, 2));
     
     // Convert spherical coordinates to Cartesian
+    // -----------------------------------------------------------------------
     lookX = camX + cos(angleY * M_PI/180) * cos(angleX * M_PI/180) * distance;
     lookY = camY + sin(angleX * M_PI/180) * distance;
     lookZ = camZ + sin(angleY * M_PI/180) * cos(angleX * M_PI/180) * distance;
@@ -450,60 +448,6 @@ void mouseMotion(int x, int y) {
     
     // Request a redraw with updated camera view
     glutPostRedisplay();
-}
-
-//======================================================================================
-// MOUSE WHEEL HANDLER
-//======================================================================================
-void mouseWheel(int button, int dir, int x, int y) {
-    float zoomSpeed = 0.1f;  // Zoom speed factor
-    
-    // Calculate forward direction for zooming
-    float forwardX = lookX - camX;
-    float forwardY = lookY - camY;
-    float forwardZ = lookZ - camZ;
-    
-    // Normalize the direction vector
-    float len = sqrt(forwardX*forwardX + forwardY*forwardY + forwardZ*forwardZ);
-    forwardX /= len; forwardY /= len; forwardZ /= len;
-    
-    if (dir > 0) { // Zoom in (wheel scrolled up)
-        camX += forwardX * zoomSpeed;
-        camY += forwardY * zoomSpeed;
-        camZ += forwardZ * zoomSpeed;
-    } else { // Zoom out (wheel scrolled down)
-        camX -= forwardX * zoomSpeed;
-        camY -= forwardY * zoomSpeed;
-        camZ -= forwardZ * zoomSpeed;
-    }
-    
-    // Request a redraw with updated camera position
-    glutPostRedisplay();
-}
-
-//======================================================================================
-// MOUSE BUTTON HANDLER
-//======================================================================================
-void mouseButton(int button, int state, int x, int y) {
-    static bool mouseCaptured = false;
-    
-    if (button == 3 || button == 4) { 
-        // Handle mouse wheel (3=up, 4=down on many systems)
-        mouseWheel(button, button == 3 ? 1 : -1, x, y);
-    } else if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-        // Toggle mouse capture on left click
-        mouseCaptured = !mouseCaptured;
-        if (mouseCaptured) {
-            glutSetCursor(GLUT_CURSOR_NONE);  // Hide cursor
-            
-            // Center mouse cursor
-            int windowWidth = glutGet(GLUT_WINDOW_WIDTH);
-            int windowHeight = glutGet(GLUT_WINDOW_HEIGHT);
-            glutWarpPointer(windowWidth/2, windowHeight/2);
-        } else {
-            glutSetCursor(GLUT_CURSOR_INHERIT);  // Show normal cursor
-        }
-    }
 }
 
 //======================================================================================
